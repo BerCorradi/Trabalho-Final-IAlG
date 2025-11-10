@@ -9,7 +9,7 @@
 
 ## 🧾 Descrição
 
-Este projeto consiste em um sistema de **cadastro e gerenciamento de músicos**, desenvolvido em **C++**, como parte do projeto prático da disciplina.  
+Este projeto consiste em um sistema de **cadastro e gerenciamento de músicos**, desenvolvido em **C++**, como parte do projeto prático da disciplina de IALG.  
 
 O sistema permite **inserir, buscar, alterar e excluir** informações de músicos, armazenadas em um **arquivo CSV**, simulando uma pequena base de dados.  
 
