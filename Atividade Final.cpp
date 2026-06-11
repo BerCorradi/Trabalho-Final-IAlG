@@ -1,60 +1,118 @@
-/* João Gabriel Carvalho Criscolo, Plinio Alves Cardoso, Bernardo */
+/* João Gabriel Carvalho Criscolo, Plinio Cardoso Alves, Bernardo Corradi Oliveira */
 
 #include <iostream>
 #include <cstring>
-#include <string.h>
-#include <stdio.h>
 #include <fstream>
 
 using namespace std;
-
+//registros dos dados
 struct musico {
-    long long CPF;
+	int CPF;
     string nome;
     int idade;
     string instrumento;
     string banda;
     bool removido = false;
 };
-
-void ordenar(musico *lista, int tam) {
-    for (int i = 0; i < tam; i++) {
+// Função para ordenar lista de músicos pelo CPF (ordem crescente)
+void ordenar_CPF(musico *lista, int tam) {
+    int posMenor;
+    for (int i = 0; i < tam - 1; i++) {
+        posMenor = i;
         for (int j = i + 1; j < tam; j++) {
-            if (lista[i].CPF > lista[j].CPF) {
-                musico temp = lista[j];
-                lista[j] = lista[i];
-                lista[i] = temp;
+            if (lista[j].CPF < lista[posMenor].CPF) {
+                posMenor = j; //encontrou o menor cpf
             }
+        }
+        if (posMenor != i) { //troca os elementos para ordenar
+            musico temp = lista[posMenor];
+            lista[posMenor] = lista[i];
+            lista[i] = temp;
         }
     }
 }
 
-int buscabinaria(musico *lista, int cpfprocurado, int inicio, int fim) {
+// Ordena lista de músicos pela idade (ordem crescente)
+void ordenar_idade(musico*&lista,int tam){
+    int posMenor;
+    for (int i = 0; i < tam-1; i++) {
+        posMenor=i;
+        for (int j = i + 1; j < tam; j++) {
+            if (lista[posMenor].idade > lista[j].idade) {
+               posMenor=j;// Encontra o músico mais jovem no intervalo
+            }
+        }
+         musico temp = lista[posMenor];
+                lista[posMenor] = lista[i];
+                lista[i] = temp;
+    }
+}
+
+// Ordena lista de músicos pelo nome (ordem alfabética)
+void ordenar_nome(musico*&lista,int tam){
+    int posMenor;
+    for (int i = 0; i < tam - 1; i++) {
+        posMenor = i;
+        for (int j = i + 1; j < tam; j++) {
+            if (lista[j].nome < lista[posMenor].nome) {
+                posMenor = j; // Encontra o nome "menor"
+            }
+        }
+        if (posMenor != i) { // Troca para ordenar alfabeticamente
+            musico temp = lista[posMenor];
+            lista[posMenor] = lista[i];
+            lista[i] = temp;
+        }
+    }
+}
+
+// Busca binária por CPF em lista ordenada
+int buscabinaria_cpf(musico *lista, int cpfprocurado, int inicio, int fim) {
     int meio = (inicio + fim) / 2;
 
     if (fim >= inicio) {
         if (lista[meio].CPF == cpfprocurado)
-            return meio;
+            return meio; // Encontrou o CPF
         else if (lista[meio].CPF < cpfprocurado)
-            return buscabinaria(lista, cpfprocurado, meio + 1, fim);
+            return buscabinaria_cpf(lista, cpfprocurado, meio + 1, fim);  // Busca à direita
         else
-            return buscabinaria(lista, cpfprocurado, inicio, meio - 1);
+            return buscabinaria_cpf(lista, cpfprocurado, inicio, meio - 1); // Busca à esquerda
     } else {
-        return -1;
+        return -1; // Nao encontrado
     }
 }
 
+
+// Busca binária por nome em lista ordenada
+int buscabinaria_nome(musico *lista, string NomeProcurado, int inicio, int fim) {
+    int meio = (inicio + fim) / 2;
+
+    if (fim >= inicio) {
+        if (lista[meio].nome == NomeProcurado)
+            return meio; // Encontrou o nome
+        else if (lista[meio].nome < NomeProcurado)
+            return buscabinaria_nome(lista,NomeProcurado, meio + 1, fim); // Busca a direita
+        else
+            return buscabinaria_nome(lista,NomeProcurado, inicio, meio - 1); // Busca a esquerda
+    } else {
+        return -1; // Nao encontrado
+    }
+}
+
+// Aumenta dinamicamente a capacidade da lista de músicos
 void redimensionar(musico *&lista, int &capacidade) {
-    int nova_capacidade = capacidade + 5;
+    int nova_capacidade = capacidade + 5; // Incremento fixo
     musico *novo = new musico[nova_capacidade];
+     // Copia os elementos existentes
     for (int i = 0; i < capacidade; i++) {
         novo[i] = lista[i];
     }
-    delete[] lista;
-    lista = novo;
-    capacidade = nova_capacidade;
+    delete[] lista; // Libera memória antiga
+    lista = novo; // O antigo aponta para o novo
+    capacidade = nova_capacidade; // Atualiza capacidade
 }
 
+// Inserção de novos músicos
 void inserir(musico *&lista, int &tam, int capacidade) {
     int inserir;
     cout << "Deseja inserir? 1-sim 2-nao: ";
@@ -62,9 +120,10 @@ void inserir(musico *&lista, int &tam, int capacidade) {
 
     while (inserir == 1) {
         if (tam >= capacidade) {
-            redimensionar(lista, capacidade);
+            redimensionar(lista, capacidade); // Redimensiona se necessário
         }
-
+		
+		 // Coleta dados do músico
         cout << "Insira os dados do musico: " << endl;
         cout << "Nome: ";
         cin.ignore();
@@ -84,29 +143,30 @@ void inserir(musico *&lista, int &tam, int capacidade) {
         cin >> inserir;
     }
 }
-
+// Exclusão lógica de músico pelo CPF
 void excluir(musico *&lista, int &tam) {
-	int cpfexcluir;
-	cout << "Digite o CPF do musico que deseja excluir: ";
-	cin >> cpfexcluir;
-	ordenar(lista, tam);
-	int posicao = buscabinaria(lista, cpfexcluir, 0, tam - 1);
-	
-	if (posicao != -1) {
-		lista[posicao].removido = true;
-		cout << "Musico marcado para ser excluido com sucesso!" << endl;
-		} else {
-		cout << "Musico com CPF " << cpfexcluir << " nao encontrado." << endl;
-		}
+    int cpfexcluir;
+    cout << "Digite o CPF do musico que deseja excluir: ";
+    cin >> cpfexcluir;
+    ordenar_CPF(lista, tam);  // Ordena antes da busca binária
+    int posicao = buscabinaria_cpf(lista, cpfexcluir, 0, tam - 1);
+    
+    if (posicao != -1) {
+        lista[posicao].removido = true;  // Marca como removido
+        cout << "Musico marcado para ser excluido com sucesso!" << endl;
+    } else {
+        cout << "Musico com CPF " << cpfexcluir << " nao encontrado." << endl;
+    }
 }
 
+// Alteração de dados de músico
 void alterar(musico *&lista, int &tam) {
     int cpfalterar;
     cout << "Digite o CPF do musico que deseja alterar: ";
     cin >> cpfalterar;
 
-    ordenar(lista, tam);
-    int posicao = buscabinaria(lista, cpfalterar, 0, tam - 1);
+    ordenar_CPF(lista, tam); // Ordena antes da busca binária
+    int posicao = buscabinaria_cpf(lista, cpfalterar, 0, tam - 1);
 
     if (posicao != -1) {
         cout << "-------------------------" << endl;
@@ -130,89 +190,111 @@ void alterar(musico *&lista, int &tam) {
     }
 }
 
-void listarMusicos(musico *lista, int tam) {
+// Listagem de músicos ativos
+int listarMusicos(musico *lista, int tam) {
     if (tam == 0) {
         cout << "Nenhum musico cadastrado." << endl;
-        return;
+        return 0;
     }
 
     cout << "------ LISTA DE MUSICOS ------" << endl;
     for (int i = 0; i < tam; i++) {
-		if (lista[i].removido == false){
-			cout << "Nome: " << lista[i].nome << endl;
-			cout << "Idade: " << lista[i].idade << endl;
-			cout << "CPF: " << lista[i].CPF << endl;
-			cout << "Instrumento: " << lista[i].instrumento << endl;
-			cout << "Banda: " << lista[i].banda << endl;
-			cout << "-------------------------" << endl;
-		}
+        if (!lista[i].removido){ // Ignora músicos marcados como removidos
+            cout << "Nome: " << lista[i].nome << endl;
+            cout << "Idade: " << lista[i].idade << endl;
+            cout << "CPF: " << lista[i].CPF << endl;
+            cout << "Instrumento: " << lista[i].instrumento << endl;
+            cout << "Banda: " << lista[i].banda << endl;
+            cout << "-------------------------" << endl;
+        }
     }
+    return 1;
 }
 
-void bandaComMaisMusicos(musico *lista, int tam) {
+// Função que encontra a banda com mais músicos ativos
+int bandaComMaisMusicos(musico *lista, int tam) {
     if (tam == 0) {
         cout << "Nenhum musico cadastrado." << endl;
-        return;
+        return 0;
     }
 
-    string* bandas= new string[tam]; 
-    int* contagem= new int [tam];
-    for(int i = 0; i < tam; i++) {
-        contagem[i] = 0;
-    }
+    string* bandas = new string[tam];  // Armazena nomes de bandas únicas
+    int* cont = new int[tam];  // Contador de músicos por banda
+
     int qtdBandas = 0;
 
+    for (int i = 0; i < tam; i++)
+        cont[i] = 0;
+
+    
     for (int i = 0; i < tam; i++) {
-		if (lista[i].removido == false) {
-			bool encontrada = false;
-			for (int j = 0; j < qtdBandas; j++) {
-				if (lista[i].banda == bandas[j]) {
-					contagem[j]++;
-					encontrada = true;
-				}
+
+        if (!lista[i].removido) { // Considera apenas músicos ativos
+
+            bool achou = false;
+
+            
+            for (int j = 0; j < qtdBandas; j++) {
+                if (lista[i].banda == bandas[j]) {
+                    cont[j]++; // Incrementa contador da banda existente
+                    achou = true;
+                }
             }
-        
-			if (!encontrada) {
-				bandas[qtdBandas] = lista[i].banda;
-				contagem[qtdBandas]= 1;
-				qtdBandas++;
-			}
-		}
+
+            
+            if (!achou) { // Nova banda encontrada
+                bandas[qtdBandas] = lista[i].banda;
+                cont[qtdBandas] = 1;
+                qtdBandas++;
+            }
+        }
     }
 
-    
-    string* bandaTop= new string[tam];
-    int contador = 1;
-    int max = 0;
-    bandaTop[0]= bandas[0];
-    for (int i = 1; i < qtdBandas; i++) {
-    
-        if (contagem[i] > max) {
-            max = contagem[i];
-            bandaTop[0] = bandas[i];
-        }
+    if (qtdBandas == 0) {
+        cout << "Nenhum musico ativo cadastrado." << endl;
+        delete[] bandas;
+        delete[] cont;
+        return 0;
     }
+    // Determina o máximo de músicos em uma banda
+    int maximo = cont[0];
     for (int i = 1; i < qtdBandas; i++) {
-        if (contagem[i] == max && bandas[i] != bandaTop[0]) {
-            bandaTop[contador] = bandas[i];
-            contador++;
-        }
+        if (cont[i] > maximo)
+            maximo = cont[i];
     }
-    if(contador== tam){
-        cout<< "Empate entre todas as bandas com " << max << " musicos cada." << endl;
-    }else if(contador>1){
-        cout<< "Empate entre as bandas: ";
-        for(int i=0; i<contador; i++){
-            cout<< bandaTop[i] << ", ";
-        }
-        cout<< " com " << max << " musicos cada." << endl;
-    }else if( contador == 0) cout << "Banda com mais musicos: " << bandaTop[0] << " (" << max << " musicos)" << endl;
 
+     // Verifica se há empate
+    int numEmpate = 0;
+    for (int i = 0; i < qtdBandas; i++) {
+        if (cont[i] == maximo)
+            numEmpate++;
+    }
+      // Exibe banda(s) com mais músicos
+    if (numEmpate > 1) {
+        cout << "Empate entre as bandas: ";
+        for (int i = 0; i < qtdBandas; i++) {
+            if (cont[i] == maximo)
+                cout << bandas[i] << ", ";
+        }
+        cout << "com " << maximo << " musicos cada." << endl;
+
+    } else {
+        for (int i = 0; i < qtdBandas; i++) {
+            if (cont[i] == maximo)
+                cout << "Banda com mais musicos: " << bandas[i]
+                     << " (" << maximo << " musicos)" << endl;
+        }
+    }
+	
     delete[] bandas;
-    delete[] contagem; 
-    delete[] bandaTop;
+    delete[] cont;
+    return 1;
 }
 
+
+
+
+// Função que exibe o menu principal e retorna a opção escolhida pelo usuário
 int interface() {
     int opcao;
     cout << "----MENU PRINCIPAL----" << endl;
@@ -222,180 +304,273 @@ int interface() {
     cout << "4 - Alterar dados do musico" << endl;
     cout << "5 - Banda com mais musicos" << endl;
     cout << "6 - Listar todos os musicos" << endl;
-    cout << "7 - Informacoes do projeto" << endl;
-	cout << "8 - Buscar por um intervalo" << endl;
+    cout << "7 - Buscar por um intervalo" << endl;
+    cout << "8 - Metodo de Ordenacao" << endl;
+    cout << "9 - Informacoes do projeto" << endl;
+    cout << "10 - Registrar alteracoes" << endl;
+    cout << "11 - Buscar musico por nome"<<endl;
     cout << "0 - Sair" << endl;
     cout << "Escolha: ";
     cin >> opcao;
-    return opcao;
+    return opcao; // Retorna a opção escolhida pelo usuário
 }
 
+// Função que exibe o menu de métodos de ordenação e retorna a opção escolhida
+int interfaceOrdenacao(){
+    int opcao;
+    cout << "----METODO DE ORDENACAO----" << endl;
+    cout << "1 - Ordenar por CPF" << endl;
+    cout << "2 - Ordenar por Idade" << endl;
+    cout << "3 - Ordenar por Nome" << endl;
+    cout << "Escolha: ";
+    cin >> opcao;
+    return opcao; // Retorna a opção de ordenação escolhida
+}
+
+// Função que lê os músicos de um arquivo CSV e preenche a lista dinâmica
+// Recebe a capacidade inicial, tamanho atual da lista e o ponteiro da lista
+// Retorna -1 se houver erro ao abrir o arquivo, 0 caso contrário
 int leitura(int &capacidade, int &tam, musico *&lista) {
-    ifstream entrada("musicos.csv");
-    if (!entrada.is_open()) {
+    ifstream entrada("musicos.csv"); // Abre arquivo CSV
+    if (!entrada.is_open()) { // Verifica se abriu corretamente
         cout << "Erro ao abrir o arquivo!" << endl;
         return -1;
     }
-
-    while (true) {
-        if (tam >= capacidade) {
+	bool a= true;  // Controle do loop de leitura
+    while (a) {
+        if (tam >= capacidade) { // Verifica se precisa redimensionar
             redimensionar(lista, capacidade);
         }
-
-        getline(entrada, lista[tam].nome, ';');
-        if (entrada.eof() || lista[tam].nome == "") break;
+		
+		 // Lê campos do arquivo
+        getline(entrada, lista[tam].nome, ';'); // Nome do músico
+        if (entrada.eof() || lista[tam].nome == "") a= false; // Fim do arquivo
+        else {
 
         entrada >> lista[tam].idade;
         entrada.ignore();
         entrada >> lista[tam].CPF;
         entrada.ignore();
         getline(entrada, lista[tam].instrumento, ';');
-        getline(entrada, lista[tam].banda, ';');
-		entrada >> lista[tam].removido;
-		entrada.ignore();
-        tam++;
+        getline(entrada, lista[tam].banda,';');
+        entrada.ignore();
+        tam++; // Incrementa quantidade de músicos lidos
+		}
     }
 
-    entrada.close();
-    return 0;
+    entrada.close();  // Fecha arquivo
+    return 0; // Leitura concluída
 }
 
+// Função que salva as alterações feitas na lista em um arquivo CSV
+// Recebe a lista de músicos e o tamanho atual
 void registrar(musico *lista, int tam) {
     cout<< "--------------------------" << endl;
-    cout << "Digite o nome do arquivo para salvar os dados: ";
-    string nome_arquivo;
-    cin>> nome_arquivo;
-    ofstream saida(nome_arquivo);
+    cout << "Salvando alteracoes" << endl;
+    cout << "Digite o nome do arquivo para registrar as mudancas:" << endl;
+    string arq;
+    cin>> arq; 
+    ofstream saida(arq); // Cria arquivo de saída
     for (int i = 0; i < tam; i++) {
-		if (lista[i].removido == false){
-			saida << lista[i].nome << ";"
-				  << lista[i].idade << ";"
-				  << lista[i].CPF << ";"
-				  << lista[i].instrumento << ";"
-				  << lista[i].banda << ";"
-				  << lista[i].removido << ";";
-		  }
+        if (!lista[i].removido){ // Salva apenas músicos ativos
+            saida << lista[i].nome << ";"
+                  << lista[i].idade << ";"
+                  << lista[i].CPF << ";"
+                  << lista[i].instrumento << ";"
+                  << lista[i].banda << ";" << endl;
+          }
     }
-    saida.close();
-    cout << "Dados salvos com sucesso no arquivo " << nome_arquivo << "!" << endl;
-    cout<< "--------------------------" << endl;
+    saida.close();  // Fecha arquivo
+    cout << "Dados salvos com sucesso no arquivo " << arq << endl;
+    cout << "--------------------------" << endl;
 }
+
+// Função que exibe informações sobre o projeto
 void informacoes_projeto()
 {
     cout << "-------------------------" << endl;
     cout << "Projeto de Cadastro de Musicos - Turma 22A" << endl;
     cout << "Desenvolvido por: " << endl;
     cout << "Joao Gabriel Carvalho Criscolo" << endl;
-    cout << "Plinio Alves Cardoso" << endl;
-    cout << "Bernardo" << endl;
+    cout << "Plinio Cardoso Alves" << endl;
+    cout << "Bernardo Corradi Oliveira" << endl;
     cout << "Linguagem utilizada: C++" << endl;
-    cout << "Funcionalidades: Inserir, Buscar, Excluir, Alterar dados de musicos" << endl;
+    cout << "Funcionalidades: Inserir, Buscar, Excluir, Alterar dados de musicos, " << endl;
     cout << "Dados armazenados em arquivo CSV" << endl;
     cout << "-------------------------" << endl;
 }
-void listarIntervalo(musico *lista, int tam, int inicio, int fim) {
+
+// Função que lista os músicos em um intervalo de índices
+// Recebe lista, tamanho da lista, índice inicial e final
+int listarIntervalo(musico *lista, int tam, int inicio, int fim) {
     if (tam == 0) {
         cout << "Nenhum musico cadastrado." << endl;
-        return;
+        return 0;
     }
-
-    if (inicio < 0) inicio = 0;
-    if (fim >= tam) fim = tam - 1;
-    if (inicio > fim) {
+    else if (inicio < 0){
+        inicio = 0;  // Ajusta índice inicial inválido
+    }
+    else if (fim >= tam){
+        fim = tam - 1; // Ajusta índice final inválido
+    }
+   else  if (inicio > fim) {  // Intervalo inválido
         cout << "Intervalo invalido." << endl;
-        return;
+        return 0 ;
     }
-
     cout << "------ LISTA DE MUSICOS (" << inicio << " a " << fim << ") ------" << endl;
     for (int i = inicio; i <= fim; i++) {
-        if (lista[i].removido == false){
-			cout << "Indice " << i << ":" << endl;
-			cout << "Nome: " << lista[i].nome << endl;
-			cout << "Idade: " << lista[i].idade << endl;
-			cout << "CPF: " << lista[i].CPF << endl;
-			cout << "Instrumento: " << lista[i].instrumento << endl;
-			cout << "Banda: " << lista[i].banda << endl;
-			cout << "-------------------------" << endl;
-		}
+        if (!lista[i].removido){ // Exibe apenas músicos ativos
+            cout << "Indice " << i << ":" << endl;
+            cout << "Nome: " << lista[i].nome << endl;
+            cout << "Idade: " << lista[i].idade << endl;
+            cout << "CPF: " << lista[i].CPF << endl;
+            cout << "Instrumento: " << lista[i].instrumento << endl;
+            cout << "Banda: " << lista[i].banda << endl;
+            cout << "-------------------------" << endl;
+        }
     }
+    return 1;
 }
+
 int main() {
+	 // Inicialização da lista com capacidade inicial
     int capacidade = 40, tam = 0;
     musico *lista = new musico[capacidade];
+    // Leitura de arquivo CSV, encerra se houver erro
     if (leitura(capacidade, tam, lista) == -1)
         return -1;
 
     int opcao;
     do {
-        opcao = interface();
+        opcao = interface(); // Mostra menu principal
+
         cout << "-------------------------" << endl << endl;
 
         switch (opcao) {
             case 1:
-                inserir(lista, tam, capacidade);
+                inserir(lista, tam, capacidade); // Inserir músicos
                 break;
-			case 2: {
-				ordenar(lista, tam);
-				cout << "Digite o CPF que deseja procurar: ";
-				int procurado;
-				cin >> procurado;
-				int pos = buscabinaria(lista, procurado, 0, tam - 1);
-				
-				if (pos != -1) {
-					if (lista[pos].removido == false) {
-						cout << "Musico encontrado:" << endl;
-						cout << "Nome: " << lista[pos].nome << endl;
-						cout << "Idade: " << lista[pos].idade << endl;
-						cout << "CPF: " << lista[pos].CPF << endl;
-						cout << "Instrumento: " << lista[pos].instrumento << endl;
-						cout << "Banda: " << lista[pos].banda << endl;
-					} else {
-						cout << "Musico encontrado, mas esta marcado para exclusao." <<endl;
-					}
-				} else {
-					cout << "Musico nao encontrado." << endl;
-				}
-				break;
-			}
-            case 3:
+                
+            case 2: {  // Buscar músico por CPF
+                ordenar_CPF(lista, tam); // Necessário para busca binária
+                cout << "Digite o CPF que deseja procurar: ";
+                int procurado;
+                cin >> procurado;
+                int pos = buscabinaria_cpf(lista, procurado, 0, tam - 1);
+                
+                if (pos != -1) {
+                    if (!lista[pos].removido) {
+                        cout << "Musico encontrado:" << endl;
+                        cout << "Nome: " << lista[pos].nome << endl;
+                        cout << "Idade: " << lista[pos].idade << endl;
+                        cout << "CPF: " << lista[pos].CPF << endl;
+                        cout << "Instrumento: " << lista[pos].instrumento << endl;
+                        cout << "Banda: " << lista[pos].banda << endl;
+                    } else {
+                        cout << "Musico encontrado, mas esta marcado para exclusao." <<endl;
+                    }
+                } else {
+                    cout << "Musico nao encontrado." << endl;
+                }
+                break;
+            }
+            
+            case 3: // Exclusão lógica
                 excluir(lista, tam);
                 break;
-            case 4:
+                
+            case 4: // Alteração de dados
                 alterar(lista, tam);
                 break;
-            case 5:
+                
+            case 5: // Banda com mais músicos
                 bandaComMaisMusicos(lista, tam);
                 break;
-            case 6:
+                
+            case 6:  // Listar todos os músicos
                 listarMusicos(lista, tam);
                 break;
-              
-			case 7:
-				informacoes_projeto(); //chamar a funcao para mostrar as informacoes do projeto
-				break;
+                
+            case 7: // Listagem por intervalo de índices
+                int inicio, fim;
+                cout << "Digite o indice inicial: ";
+                cin >> inicio;
+                cout << "Digite o indice final: ";
+                cin >> fim;
+                listarIntervalo(lista, tam, inicio, fim);
+                break;  
+                
+            case 8: { // Menu de ordenação
+                int opcOrdenacao = interfaceOrdenacao();
+                switch (opcOrdenacao) {
+                    case 1:
+                        ordenar_CPF(lista, tam);
+                        cout << "Ordenado por CPF!" << endl;
+                        break;
+
+                    case 2:
+                        ordenar_idade(lista, tam);   
+						cout << "Ordenado por idade!" << endl;
+                        break;
+                        
+                    case 3:
+                        ordenar_nome(lista, tam);   
+						cout << "Ordenado por nome!" << endl;
+                        break;
+
+                    default:
+                        cout << "Opcao invalida no menu de ordenacao." << endl;
+                        break;
+                }
+                break;
+            }
+                
+            case 9: // Mostrar informações do projeto
+                informacoes_projeto();
+                break;
 			
-			case 8:
-				int inicio, fim;
-				cout << "Digite o indice inicial: ";
-				cin >> inicio;
-				cout << "Digite o indice final: ";
-				cin >> fim;
-				listarIntervalo(lista, tam, inicio, fim);
-				break;
+			case 10: // Salvar alterações em arquivo
+			 registrar(lista, tam);
+             break;
+             
+             case 11:{ // Busca por nome usando busca binária
+             ordenar_nome(lista,tam);  // Ordenar para busca binária
+             cout << "Digite o NOME que deseja procurar: ";
+             string busca;
+             cin >> busca;
+             cout << endl;
+                int posc;
+                posc = buscabinaria_nome(lista, busca, 0, tam - 1);
+                
+                if (posc != -1) {
+                    if (!lista[posc].removido) {
+                        cout << "Musico encontrado:" << endl;
+                        cout << "Nome: " << lista[posc].nome << endl;
+                        cout << "Idade: " << lista[posc].idade << endl;
+                        cout << "CPF: " << lista[posc].CPF << endl;
+                        cout << "Instrumento: " << lista[posc].instrumento << endl;
+                        cout << "Banda: " << lista[posc].banda << endl;
+                    } else {
+                        cout << "Musico encontrado, mas esta marcado para exclusao." <<endl;
+                    }
+                } else {
+                    cout << "Musico nao encontrado." << endl;
+                }
+                break;
+			}
 			
-            case 0:
+            case 0: // Sair do programa
                 cout << "Saindo do programa..." << endl;
                 registrar(lista, tam);
                 break;
                 
             default:
                 cout << "Opcao invalida, tente novamente." << endl;
-                return interface(); //alterei para retornar ao menu em caso de opcao invalida
                 break;
         }
 
     } while (opcao != 0);
 
-    delete[] lista;
-    return 0;
+    delete[] lista; // Liberar memória
+	return 0;
 }
